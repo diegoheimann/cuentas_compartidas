@@ -8,6 +8,49 @@ st.set_page_config(
     page_title="Cuentas Compartidas", page_icon="💰", layout="wide"
 )
 
+# --- CONFIGURACIÓN DE ACCESO (USUARIO Y CONTRASEÑA) ---
+# Puedes cambiar aquí el usuario y la contraseña que prefieras
+USUARIO_CORRECTO = "valev24"
+CONTRASEÑA_CORRECTA = "embru1730"  # ¡Cámbiala por la que quieras!
+
+
+# Función para manejar el estado de autenticación
+def verificar_login():
+  if "autenticado" not in st.session_state:
+    st.session_state.autenticado = False
+
+
+verificar_login()
+
+# Si NO está autenticado, mostramos la pantalla de login
+if not st.session_state.autenticado:
+  st.title("🔒 Acceso Restringido")
+  st.write("Por favor, ingresa los datos para acceder a las cuentas.")
+
+  with st.form("form_login"):
+    usuario_ingresado = st.text_input("Usuario")
+    password_ingresada = st.text_input("Contraseña", type="password")
+    submit_login = st.form_submit_button("Ingresar")
+
+    if submit_login:
+      if (
+          usuario_ingresado == USUARIO_CORRECTO
+          and password_ingresada == CONTRASEÑA_CORRECTA
+      ):
+        st.session_state.autenticado = True
+        st.success("¡Acceso concedido!")
+        st.rerun()
+      else:
+        st.error("Usuario o contraseña incorrectos.")
+
+  # Detenemos la ejecución aquí para que no muestre el resto de la app
+  st.stop()
+
+
+# ==========================================================
+# A PARTIR DE ACÁ ES LA APLICACIÓN PRINCIPAL (SOLO SI ESTÁ LOGUEADO)
+# ==========================================================
+
 CSV_FILE = "movimientos.csv"
 
 
@@ -16,7 +59,6 @@ def cargar_datos():
   if os.path.exists(CSV_FILE):
     df = pd.read_csv(CSV_FILE)
   else:
-    # Estructura inicial del archivo de movimientos
     df = pd.DataFrame(columns=[
         "Fecha",
         "Tipo_Operacion",
@@ -32,11 +74,17 @@ def cargar_datos():
 
 df_movs = cargar_datos()
 
+# Botón para cerrar sesión en la barra lateral o arriba
+with st.sidebar:
+  st.write(f"Conectado como: **{USUARIO_CORRECTO}**")
+  if st.button("🚪 Cerrar Sesión"):
+    st.session_state.autenticado = False
+    st.rerun()
+
 # Título principal
 st.title("📊 Control de Cuentas Compartidas")
 
 # --- 1. CÁLCULOS DE BALANCES ---
-# Inicializamos contadores
 balance_local = 0.0
 balance_extranjera = 0.0
 buffer_caja_seguridad = 0.0
@@ -57,23 +105,17 @@ if not df_movs.empty:
         balance_local += monto_l
       else:
         balance_extranjera += monto_e
-        # Si es un ingreso (positivo) en moneda extranjera, también va al buffer de caja
         if monto_e > 0:
           buffer_caja_seguridad += monto_e
-        # Si fuera un egreso (negativo) en moneda extranjera, descuenta del buffer si lo hubiera
         elif monto_e < 0:
-          buffer_caja_seguridad += (
-              monto_e  # monto_e ya es negativo, por lo que resta
-          )
+          buffer_caja_seguridad += monto_e
 
     elif op == "Cambio de Moneda":
-      # Resta de local, suma a extranjera y suma al buffer pendiente de caja
       balance_local -= monto_l
       balance_extranjera += monto_e
       buffer_caja_seguridad += monto_e
 
     elif op == "Traslado a Caja de Seguridad":
-      # Reduce el buffer pendiente y aumenta el acumulado de la caja de seguridad
       buffer_caja_seguridad -= monto_e
       total_caja_seguridad += monto_e
 
@@ -157,7 +199,6 @@ with tab1:
 
     if submitted_ie:
       if monto_val > 0:
-        # Ajustar signo si es egreso
         monto_final = -monto_val if "Egreso" in tipo_ie else monto_val
         ml = monto_final if cuenta_ie == "Moneda Local" else 0.0
         me = monto_final if cuenta_ie == "Moneda Extranjera" else 0.0
