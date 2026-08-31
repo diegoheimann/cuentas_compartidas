@@ -1,6 +1,2 @@
 Fecha,Tipo_Operacion,Cuenta,Monto_Local,Monto_Extranjera,Tipo_Cambio,Comentario
-2026-08-31 13:42,Ingreso / Gasto,Moneda Local,4400000.0,0.0,,
-2026-08-31 13:42,Ingreso / Gasto,Moneda Local,4400000.0,0.0,,Ingreso Inicial
-2026-08-31 13:42,Cambio de Moneda,Ambas,1500000.0,1000.0,1500.0,Cambio inicial
-2026-08-31 13:43,Ingreso / Gasto,Moneda Extranjera,0.0,500.0,,Ingreso Inicial dolares
-2026-08-31 13:44,Traslado a Caja de Seguridad,Moneda Extranjera,0.0,500.0,,Llevo 500
+
